@@ -41,7 +41,7 @@ def _cast_if_autocast_enabled(tensor):
 
 def rms_norm(x, weight = None, eps = 1e-5):
     # mean을 0으로 가정하고 variance를 구함 
-    out = x * torch.rsqrt(x.pow(2).mean(dim = -1, keepdim = True) + eps)
+    output = x * torch.rsqrt(x.pow(2).mean(dim = -1, keepdim = True) + eps)
     if weight is not None:
         return output * weight
     return output
@@ -67,3 +67,30 @@ class RMSNorm(nn.Module):
       def forward(self, x):
          return rms_norm(x.float(), self.weight, self.eps).to(dtype = x.dtype)
 ```
+
+## Experiments
+
+### Inference 
+RTX3090 1 GPU, batch size : 128, seq_len : 1024, dim : 4096
+
+Time 
+
+
+<img width="378" alt="image" src="https://github.com/Podossiu/Efficient_LLM/assets/86233304/eca2d005-ec68-4736-adb2-3911a2495fd2">
+
+Memory
+
+
+<img width="383" alt="image" src="https://github.com/Podossiu/Efficient_LLM/assets/86233304/212af5e1-73a7-4e77-9ef9-d4b5808f6fab">
+
+
+단순히 naive한 구현으로는 LayerNorm보다 RMSNorm이 더 느린 성능과 높은 메모리 사용량을 보여줌 
+
+왜??
+
+# 추가 고려할 점 
+1) RMSNorm이 LayerNorm과 비교하여 얼마나 overhead를 줄여주는지?
+
+2) LayerNorm의 경우 Fusion이 가능한지?
+
+3) 현재 apex에서 어떻게 fusion하고 있는지? 
